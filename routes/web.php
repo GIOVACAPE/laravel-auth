@@ -1,14 +1,14 @@
 <?php
 
+use App\Http\Controllers\Guest\HomeController as GuestHomeController;
+use App\Http\Controllers\Admin\HomeController as AdminHomeController;
+use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-// Controllers
-use App\Http\Controllers\Admin\PageController;
-
 /*
 |--------------------------------------------------------------------------
-| Web Routes
+| Web RoutesP
 |--------------------------------------------------------------------------
 |
 | Here is where you can register web routes for your application. These
@@ -17,18 +17,32 @@ use App\Http\Controllers\Admin\PageController;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+Route::get('/', [GuestHomeController::class, 'index']);
+
+
+// Rotte protette
+Route::middleware(['auth', 'verified'])->name('admin.')->prefix('/admin')->group(function () {
+
+    //DASHBORD DELL'UTENTE LOGGATO;  svoto alcuni campi perche già messi sopra(come il nome e il prefisso) 
+    Route::get('/', [AdminHomeController::class, 'index'])->name('home');
+
+    // Rotte dei miei project
+    Route::resource('projects', ProjectController::class);
+
+    // ! Rotta per i toggle
+    Route::patch('/projects/{project}/toggle', [ProjectController::class, 'toggle'])->name('projects.toggle');
 });
 
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', [PageController::class, 'dashboard'])->name('dashboard');
+
+
+
+
+
+
+Route::middleware('auth')->name('profile.')->prefix('/profile')->group(function () {
+    Route::get('/', [ProfileController::class, 'edit'])->name('edit');
+    Route::patch('/', [ProfileController::class, 'update'])->name('update');
+    Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
 });
 
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
-
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
